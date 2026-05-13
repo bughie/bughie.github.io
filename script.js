@@ -1,31 +1,44 @@
 /* ============================================================
    HANSON OSHIOBUGHIE — IT EXECUTIVE PORTFOLIO
-   script.js: Nav scroll effect, mobile menu, contact form
+   script.js: Nav scroll, mobile menu, fade-in animations
    ============================================================ */
 
-/* ---------- NAVBAR: Add "scrolled" class after user scrolls down ---------- */
+/* ---------- NAVBAR: scroll effect ---------- */
 const navbar = document.getElementById('navbar');
-
 window.addEventListener('scroll', () => {
-  if (window.scrollY > 40) {
-    navbar.classList.add('scrolled');
-  } else {
-    navbar.classList.remove('scrolled');
-  }
+  navbar.style.background = window.scrollY > 40
+    ? 'rgba(10, 15, 30, 0.97)'
+    : 'rgba(10, 15, 30, 0.85)';
 });
 
 /* ---------- MOBILE NAV TOGGLE ---------- */
-const navToggle  = document.getElementById('navToggle');
-const navLinks   = document.getElementById('navLinks');
+const navToggle = document.getElementById('navToggle');
+const navLinks  = document.getElementById('navLinks');
 
 navToggle.addEventListener('click', () => {
   navLinks.classList.toggle('open');
 });
 
-// Close mobile menu when a link is clicked
-navLinks.querySelectorAll('.nav-link').forEach(link => {
-  link.addEventListener('click', () => {
-    navLinks.classList.remove('open');
+// Close menu when a nav link is tapped
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => navLinks.classList.remove('open'));
+});
+
+/* ---------- FADE-IN ON SCROLL (Intersection Observer) ---------- */
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+/* ---------- STAGGER ANIMATION for grids ---------- */
+document.querySelectorAll('.competencies-grid, .projects-grid, .about-cards').forEach(grid => {
+  Array.from(grid.children).forEach((child, i) => {
+    child.style.transitionDelay = `${i * 0.08}s`;
   });
 });
 
@@ -34,40 +47,38 @@ const form       = document.getElementById('contactForm');
 const submitBtn  = document.getElementById('submitBtn');
 const successMsg = document.getElementById('formSuccess');
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault(); // Prevent default page reload
+if (form) {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  // Give user visual feedback while sending
-  submitBtn.textContent = 'Sending…';
-  submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    submitBtn.disabled = true;
 
-  try {
-    const response = await fetch(form.action, {
-      method: 'POST',
-      body: new FormData(form),
-      headers: { 'Accept': 'application/json' }
-    });
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      });
 
-    if (response.ok) {
-      // Success: hide the form fields and show the success message
-      form.reset();
-      submitBtn.style.display = 'none';
-      successMsg.classList.add('visible');
-    } else {
-      // Server returned an error
-      submitBtn.textContent = 'Try Again';
+      if (response.ok) {
+        form.reset();
+        submitBtn.style.display = 'none';
+        successMsg.classList.add('visible');
+      } else {
+        submitBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Try Again`;
+        submitBtn.disabled = false;
+        alert('Something went wrong. Please email bughie@gmail.com directly.');
+      }
+    } catch {
+      submitBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Try Again`;
       submitBtn.disabled = false;
-      alert('Something went wrong. Please email hanson@cellanome.com directly.');
+      alert('Unable to send. Please email bughie@gmail.com directly.');
     }
-  } catch {
-    // Network error
-    submitBtn.textContent = 'Try Again';
-    submitBtn.disabled = false;
-    alert('Unable to send. Please email hanson@cellanome.com directly.');
-  }
-});
+  });
+}
 
-/* ---------- SMOOTH SCROLL for anchor links (backup for older browsers) ---------- */
+/* ---------- SMOOTH SCROLL fallback for older browsers ---------- */
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', (e) => {
     const target = document.querySelector(anchor.getAttribute('href'));
